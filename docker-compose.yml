@@ -1,0 +1,127 @@
+version: '3.9'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: mongovis
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres-data-v2:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: ./apps/api
+      dockerfile: Dockerfile
+      target: production
+    ports:
+      - "3001:3001"
+    environment:
+      NODE_ENV: production
+      PORT: 3001
+      DATABASE_URL: postgresql://postgres:${POSTGRES_PASSWORD}@postgres:5432/mongovis
+      REDIS_URL: redis://redis:6379
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY}
+      JWT_SECRET: ${JWT_SECRET}
+      TEMP_DIR: /tmp/mongovis
+      BACKUP_DIR: /app/backups
+      BACKUP_ENCRYPTION_KEY: ${BACKUP_ENCRYPTION_KEY:-}
+    volumes:
+      - backup-data:/app/backups
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  prometheus:
+    build:
+      context: ./config/prometheus
+      dockerfile: Dockerfile
+    ports:
+      - "9090:9090"
+    volumes:
+      - prometheus-data-v2:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=30d'
+    # Allow Prometheus to reach the API when it runs on the host machine
+    # (local dev via `pnpm dev`). Mac/Win Docker Desktop resolves
+    # `host.docker.internal` automatically; on Linux we need this mapping.
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  grafana:
+    build:
+      context: ./config/grafana
+      dockerfile: Dockerfile
+    ports:
+      - "3003:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
+      GF_PATHS_PROVISIONING: /etc/grafana/provisioning
+    volumes:
+      - grafana-data:/var/lib/grafana
+    depends_on:
+      - prometheus
+
+  web:
+    build:
+      context: ./apps/web
+      dockerfile: Dockerfile
+      target: production
+      args:
+        VITE_GRAFANA_URL: ${VITE_GRAFANA_URL}
+    ports:
+      - "3002:80"
+    environment:
+      VITE_API_URL: http://localhost:3001
+      VITE_GRAFANA_URL: http://localhost:3003
+    depends_on:
+      - api
+
+volumes:
+  # NOTE: renamed from `postgres-data` to `postgres-data-v2` to force a fresh
+  # empty metadata DB on the next deploy (full reset — all users, connections,
+  # alerts, sync/backup job records). The old volume is left orphaned in
+  # Docker — safe to delete via the Coolify Server → Volumes page later if
+  # you want to reclaim disk.
+  postgres-data-v2:
+  redis-data:
+  # NOTE: renamed from `prometheus-data` to `prometheus-data-v2` to force a
+  # fresh empty TSDB on the next deploy. The previous volume had duplicate
+  # scrape series (api:3001 + host.docker.internal:3001) baked into 30 days
+  # of history, which Grafana was rendering as doubled values in every panel.
+  # The old volume is left orphaned in Docker — safe to delete via the Coolify
+  # Server → Volumes page later if you want to reclaim disk.
+  prometheus-data-v2:
+  grafana-data:
+  backup-data:
+

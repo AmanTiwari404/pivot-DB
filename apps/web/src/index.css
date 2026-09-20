@@ -1,0 +1,215 @@
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================================
+   Console Theme — light, IBM Plex, indigo accent
+   Mirrors handoff `Console Theme.html` token-for-token.
+   ============================================================ */
+@layer base {
+  :root {
+    /* --- Surface scale ------------------------------------- */
+    --canvas:         #FBFAF7;
+    --surface:        #FFFFFF;
+    --rail:           #F4F2EC;   /* sidebar bg */
+    --rail-strong:    #EDEAE0;
+    --border-soft:    #ECE9E1;
+    --border:         #E0DCD0;
+    --border-strong:  #C9C5B8;
+
+    /* --- Text scale ---------------------------------------- */
+    --text-1: #1B1B1A;
+    --text-2: #4C4A43;
+    --text-3: #7A7669;
+    --text-4: #A9A498;
+
+    /* --- Accent (indigo, tweakable) ------------------------ */
+    --accent:        oklch(0.42 0.14 268);
+    --accent-hover:  oklch(0.38 0.14 268);
+    --accent-soft:   oklch(0.965 0.025 268);
+    --accent-soft-2: oklch(0.94  0.04  268);
+    --accent-ink:    #FFFFFF;
+
+    /* --- Semantic ----------------------------------------- */
+    --success:       oklch(0.52 0.13 155);
+    --success-soft:  oklch(0.95 0.04 155);
+    --warn:          oklch(0.62 0.15 70);
+    --warn-soft:     oklch(0.96 0.05 70);
+    --danger:        oklch(0.52 0.18 25);
+    --danger-soft:   oklch(0.96 0.05 25);
+
+    /* --- Radii / shadows ---------------------------------- */
+    --radius-sm: 4px;
+    --radius:    6px;
+    --radius-lg: 10px;
+
+    --shadow-1: 0 1px 0 rgba(20, 18, 14, 0.04);
+    --shadow-2: 0 1px 2px rgba(20, 18, 14, 0.04), 0 0 0 1px var(--border-soft);
+    --shadow-pop: 0 12px 32px -8px rgba(20, 18, 14, 0.12), 0 2px 6px rgba(20, 18, 14, 0.06);
+
+    --font-sans: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+
+    --color-scheme: light;
+
+    /* --- shadcn compatibility shims (HSL form) -------------
+       Existing shadcn components read --background/--foreground
+       as HSL channels. We map them to our console palette so
+       legacy components still render against the new theme. */
+    --background:            42 33% 98%;   /* canvas */
+    --foreground:            48 6% 11%;    /* text-1 */
+    --card:                  0 0% 100%;    /* surface */
+    --card-foreground:       48 6% 11%;
+    --popover:               0 0% 100%;
+    --popover-foreground:    48 6% 11%;
+    --primary:               245 47% 38%;  /* accent */
+    --primary-foreground:    0 0% 100%;
+    --secondary:             46 23% 92%;   /* rail */
+    --secondary-foreground:  48 6% 11%;
+    --muted:                 46 23% 92%;
+    --muted-foreground:      45 6% 45%;    /* text-3 */
+    --accent-color:          245 47% 38%;
+    --accent-foreground:     0 0% 100%;
+    --destructive:           14 67% 47%;   /* danger */
+    --destructive-foreground:0 0% 100%;
+    --border:                45 22% 86%;   /* border */
+    --input:                 45 22% 86%;
+    --ring:                  245 47% 38%;
+    --radius: 6px;
+  }
+
+  /* ============================================================
+     DARK THEME — activated by <html class="dark">.
+     Mirrors the light scale token-for-token in inverted space.
+     ============================================================ */
+  html.dark {
+    --canvas:         #0E0D0C;
+    --surface:        #181715;
+    --rail:           #1F1E1B;
+    --rail-strong:    #26241F;
+    --border-soft:    #2A2823;
+    --border:         #3A3732;
+    --border-strong:  #4F4C45;
+
+    --text-1: #F4F2EC;
+    --text-2: #C9C5B8;
+    --text-3: #8A8676;
+    --text-4: #5C594F;
+
+    --accent:        oklch(0.72 0.16 268);
+    --accent-hover:  oklch(0.78 0.16 268);
+    --accent-soft:   oklch(0.30 0.10 268);
+    --accent-soft-2: oklch(0.36 0.13 268);
+    --accent-ink:    #0E0D0C;
+
+    --success:       oklch(0.72 0.16 155);
+    --success-soft:  oklch(0.26 0.07 155);
+    --warn:          oklch(0.78 0.17 70);
+    --warn-soft:     oklch(0.28 0.08 70);
+    --danger:        oklch(0.72 0.20 25);
+    --danger-soft:   oklch(0.28 0.09 25);
+
+    --shadow-1: 0 1px 0 rgba(0, 0, 0, 0.30);
+    --shadow-2: 0 1px 2px rgba(0, 0, 0, 0.30), 0 0 0 1px var(--border-soft);
+    --shadow-pop: 0 12px 32px -8px rgba(0, 0, 0, 0.55), 0 2px 6px rgba(0, 0, 0, 0.4);
+
+    --color-scheme: dark;
+
+    /* shadcn HSL shims — dark variant */
+    --background:            45 6% 6%;
+    --foreground:            46 23% 94%;
+    --card:                  45 7% 9%;
+    --card-foreground:       46 23% 94%;
+    --popover:               45 7% 9%;
+    --popover-foreground:    46 23% 94%;
+    --primary:               245 70% 70%;
+    --primary-foreground:    45 6% 6%;
+    --secondary:             45 7% 12%;
+    --secondary-foreground:  46 23% 94%;
+    --muted:                 45 7% 12%;
+    --muted-foreground:      45 8% 56%;
+    --accent-color:          245 70% 70%;
+    --accent-foreground:     45 6% 6%;
+    --destructive:           14 75% 60%;
+    --destructive-foreground:0 0% 100%;
+    --border:                45 8% 20%;
+    --input:                 45 8% 20%;
+    --ring:                  245 70% 70%;
+  }
+
+  html { color-scheme: var(--color-scheme); }
+}
+
+@layer base {
+  * { border-color: var(--border-soft); }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: var(--font-sans);
+    color: var(--text-1);
+    background: var(--canvas);
+    font-size: 14px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+/* ============================================================
+   Shared utility classes (used across screens)
+   ============================================================ */
+.mono { font-family: var(--font-mono); }
+.num  { font-feature-settings: "tnum" 1, "lnum" 1; }
+.truncate-line { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.row-border { box-shadow: inset 0 -1px 0 var(--border-soft); }
+
+.placeholder-stripe {
+  background:
+    repeating-linear-gradient(
+      135deg,
+      rgba(27, 27, 26, 0.025) 0 8px,
+      rgba(27, 27, 26, 0.0)   8px 16px
+    ),
+    var(--rail);
+  border: 1px dashed var(--border);
+  color: var(--text-3);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: var(--radius);
+}
+
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-thumb {
+  background: var(--border); border-radius: 10px;
+  border: 2px solid transparent; background-clip: padding-box;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--border-strong); background-clip: padding-box; border: 2px solid transparent;
+}
+::-webkit-scrollbar-track { background: transparent; }
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+p, h1, h2, h3 { text-wrap: pretty; }
+
+@keyframes pulse-soft {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.55; }
+}
+
+/* React Flow on light canvas */
+.react-flow__background { background: var(--canvas); }
+.react-flow__node {
+  background: var(--surface);
+  border-color: var(--border);
+  color: var(--text-1);
+}
+
+/* Monaco editor stays dark — fine for code panes */

@@ -1,0 +1,36 @@
+version: '3.9'
+
+services:
+  postgres:
+    ports:
+      - "5432:5432"
+
+  redis:
+    ports:
+      - "6379:6379"
+
+  api:
+    build:
+      target: development
+    volumes:
+      - ./apps/api/src:/app/src
+    command: pnpm dev
+    environment:
+      NODE_ENV: development
+
+  web:
+    build:
+      target: development
+    volumes:
+      - ./apps/web/src:/app/src
+    ports:
+      - "5173:5173"
+    command: pnpm dev --host
+
+  prometheus:
+    volumes:
+      - ./config/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+
+  grafana:
+    environment:
+      GF_LOG_LEVEL: warn

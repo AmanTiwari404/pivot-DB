@@ -1,0 +1,16 @@
+packages:
+  - 'apps/*'
+
+onlyBuiltDependencies:
+  - '@prisma/client'
+  - '@prisma/engines'
+  - esbuild
+  - msgpackr-extract
+  - prisma
+
+allowBuilds:
+  '@prisma/client': true
+  '@prisma/engines': true
+  esbuild: true
+  msgpackr-extract: true
+  prisma: true

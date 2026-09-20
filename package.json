@@ -1,0 +1,23 @@
+{
+  "name": "mongodb-visualizer",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "go": "bash dev.sh",
+    "dev": "concurrently --names \"API,WEB\" --prefix-colors \"cyan,green\" \"pnpm --filter api dev\" \"pnpm --filter web dev\"",
+    "build": "pnpm --filter api build && pnpm --filter web build",
+    "start": "pnpm --filter api start"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@prisma/client",
+      "@prisma/engines",
+      "esbuild",
+      "msgpackr-extract",
+      "prisma"
+    ]
+  }
+}

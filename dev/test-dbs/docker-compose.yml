@@ -1,0 +1,190 @@
+# Local test fixtures for the 9 cross-engine migration directions.
+#
+# These containers are *only* for local dev — they are NOT included in the
+# production docker-compose.yml or the Coolify deployment.
+#
+#   cd dev/test-dbs && docker compose up -d
+#
+# Naming convention:
+#   *-a containers are SEEDED with realistic data (used as migration sources)
+#   *-b containers start EMPTY (used as migration destinations)
+#
+# Ports are non-default to avoid colliding with any locally-running DB or
+# the app's own metadata Postgres on 5432.
+#
+# Credentials (everywhere): testuser / testpass123
+#
+# Connection strings (from the host machine):
+#   MongoDB A:    mongodb://testuser:testpass123@localhost:27018/testdb?authSource=admin
+#   MongoDB B:    mongodb://testuser:testpass123@localhost:27019/testdb?authSource=admin
+#   Postgres A:   postgresql://testuser:testpass123@localhost:5433/testdb
+#   Postgres B:   postgresql://testuser:testpass123@localhost:5434/testdb
+#   MySQL A:      mysql://testuser:testpass123@localhost:3307/testdb
+#   MySQL B:      mysql://testuser:testpass123@localhost:3308/testdb
+#
+# Notes:
+#   * Mongo containers are standalone (not replica sets). That's enough for
+#     the 9 migration directions. CDC sync requires a replica set source —
+#     use Atlas or convert one of these manually if you want to test that.
+#   * Postgres-A and Postgres-B both run with wal_level=logical so you can
+#     test CDC against either as a source.
+#   * MySQL-A and MySQL-B both run with binlog ROW format for the same reason.
+
+services:
+  # ── MongoDB A — seeded source ──────────────────────────────────────────────
+  test-mongodb-a:
+    image: mongo:7.0
+    container_name: test-mongodb-a
+    ports:
+      - "27018:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: testuser
+      MONGO_INITDB_ROOT_PASSWORD: testpass123
+      MONGO_INITDB_DATABASE: testdb
+    volumes:
+      - test-mongodb-a-data:/data/db
+      - ./mongo:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD", "mongosh", "-u", "testuser", "-p", "testpass123", "--authenticationDatabase", "admin", "--quiet", "--eval", "db.adminCommand('ping')"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # ── MongoDB B — empty destination ──────────────────────────────────────────
+  test-mongodb-b:
+    image: mongo:7.0
+    container_name: test-mongodb-b
+    ports:
+      - "27019:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: testuser
+      MONGO_INITDB_ROOT_PASSWORD: testpass123
+      MONGO_INITDB_DATABASE: testdb
+    volumes:
+      - test-mongodb-b-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "-u", "testuser", "-p", "testpass123", "--authenticationDatabase", "admin", "--quiet", "--eval", "db.adminCommand('ping')"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # ── PostgreSQL A — seeded source ───────────────────────────────────────────
+  test-postgres-a:
+    image: postgres:16-alpine
+    container_name: test-postgres-a
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_DB: testdb
+      POSTGRES_USER: testuser
+      POSTGRES_PASSWORD: testpass123
+    volumes:
+      - test-postgres-a-data:/var/lib/postgresql/data
+      - ./postgres:/docker-entrypoint-initdb.d:ro
+    # wal_level=logical + slot config enables CDC. pg_stat_statements is
+    # preloaded so the Monitor page can read slow queries.
+    command:
+      - postgres
+      - -c
+      - shared_preload_libraries=pg_stat_statements
+      - -c
+      - wal_level=logical
+      - -c
+      - max_replication_slots=4
+      - -c
+      - max_wal_senders=4
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U testuser -d testdb"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # ── PostgreSQL B — empty destination ───────────────────────────────────────
+  test-postgres-b:
+    image: postgres:16-alpine
+    container_name: test-postgres-b
+    ports:
+      - "5434:5432"
+    environment:
+      POSTGRES_DB: testdb
+      POSTGRES_USER: testuser
+      POSTGRES_PASSWORD: testpass123
+    volumes:
+      - test-postgres-b-data:/var/lib/postgresql/data
+    command:
+      - postgres
+      - -c
+      - shared_preload_libraries=pg_stat_statements
+      - -c
+      - wal_level=logical
+      - -c
+      - max_replication_slots=4
+      - -c
+      - max_wal_senders=4
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U testuser -d testdb"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # ── MySQL A — seeded source ────────────────────────────────────────────────
+  test-mysql-a:
+    image: mysql:8.0
+    container_name: test-mysql-a
+    ports:
+      - "3307:3306"
+    environment:
+      MYSQL_DATABASE: testdb
+      MYSQL_USER: testuser
+      MYSQL_PASSWORD: testpass123
+      MYSQL_ROOT_PASSWORD: rootpass123
+    volumes:
+      - test-mysql-a-data:/var/lib/mysql
+      - ./mysql:/docker-entrypoint-initdb.d:ro
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --log-bin=mysql-bin
+      - --binlog-format=ROW
+      - --binlog-row-image=FULL
+      - --server-id=1
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-utestuser", "-ptestpass123"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # ── MySQL B — empty destination ────────────────────────────────────────────
+  test-mysql-b:
+    image: mysql:8.0
+    container_name: test-mysql-b
+    ports:
+      - "3308:3306"
+    environment:
+      MYSQL_DATABASE: testdb
+      MYSQL_USER: testuser
+      MYSQL_PASSWORD: testpass123
+      MYSQL_ROOT_PASSWORD: rootpass123
+    volumes:
+      - test-mysql-b-data:/var/lib/mysql
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --log-bin=mysql-bin
+      - --binlog-format=ROW
+      - --binlog-row-image=FULL
+      # server_id must differ from A so the two could replicate without collision.
+      - --server-id=2
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-utestuser", "-ptestpass123"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  test-mongodb-a-data:
+  test-mongodb-b-data:
+  test-postgres-a-data:
+  test-postgres-b-data:
+  test-mysql-a-data:
+  test-mysql-b-data:

@@ -1,0 +1,16 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  # Production: API is the `api` service inside the same Docker network.
+  # If you want Prometheus to scrape `pnpm dev` on the host for LOCAL
+  # development, override this file with a bind mount that adds
+  # `host.docker.internal:3001` as an additional target — DO NOT list both
+  # here, because in production both targets resolve to the same instance
+  # and every metric ends up duplicated in Grafana panels (counted twice).
+  - job_name: 'mongodb-visualizer-api'
+    static_configs:
+      - targets:
+          - 'api:3001'
+    metrics_path: '/metrics'

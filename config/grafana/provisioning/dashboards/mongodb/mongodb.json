@@ -1,0 +1,93 @@
+{
+  "title": "PivotDB",
+  "uid": "mongodb-adv-vis",
+  "schemaVersion": 38,
+  "refresh": "5s",
+  "time": { "from": "now-1h", "to": "now" },
+  "templating": {
+    "list": [
+      {
+        "name": "connection_name",
+        "type": "query",
+        "datasource": "Prometheus",
+        "query": "label_values(mongodb_connections_current, connection_name)",
+        "refresh": 2,
+        "includeAll": false,
+        "label": "Connection"
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "title": "Current Connections",
+      "type": "stat",
+      "gridPos": { "x": 0, "y": 0, "w": 6, "h": 4 },
+      "targets": [{ "expr": "mongodb_connections_current{connection_name=~\"$connection_name\"}", "legendFormat": "Current" }]
+    },
+    {
+      "id": 2,
+      "title": "Available Connections",
+      "type": "stat",
+      "gridPos": { "x": 6, "y": 0, "w": 6, "h": 4 },
+      "targets": [{ "expr": "mongodb_connections_available{connection_name=~\"$connection_name\"}", "legendFormat": "Available" }]
+    },
+    {
+      "id": 3,
+      "title": "Resident Memory (MB)",
+      "type": "stat",
+      "gridPos": { "x": 12, "y": 0, "w": 6, "h": 4 },
+      "targets": [{ "expr": "mongodb_memory_resident_mb{connection_name=~\"$connection_name\"}", "legendFormat": "Resident MB" }]
+    },
+    {
+      "id": 4,
+      "title": "WiredTiger Cache Used",
+      "type": "gauge",
+      "gridPos": { "x": 18, "y": 0, "w": 6, "h": 4 },
+      "targets": [{ "expr": "mongodb_wt_cache_used_bytes{connection_name=~\"$connection_name\"} / mongodb_wt_cache_max_bytes{connection_name=~\"$connection_name\"} * 100", "legendFormat": "Cache %" }],
+      "fieldConfig": { "defaults": { "unit": "percent", "min": 0, "max": 100 } }
+    },
+    {
+      "id": 5,
+      "title": "Operations Per Second",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 4, "w": 12, "h": 8 },
+      "targets": [
+        { "expr": "mongodb_ops_insert_per_sec{connection_name=~\"$connection_name\"}", "legendFormat": "Insert" },
+        { "expr": "mongodb_ops_query_per_sec{connection_name=~\"$connection_name\"}", "legendFormat": "Query" },
+        { "expr": "mongodb_ops_update_per_sec{connection_name=~\"$connection_name\"}", "legendFormat": "Update" },
+        { "expr": "mongodb_ops_delete_per_sec{connection_name=~\"$connection_name\"}", "legendFormat": "Delete" },
+        { "expr": "mongodb_ops_getmore_per_sec{connection_name=~\"$connection_name\"}", "legendFormat": "Getmore" }
+      ]
+    },
+    {
+      "id": 6,
+      "title": "Memory Usage (MB)",
+      "type": "timeseries",
+      "gridPos": { "x": 12, "y": 4, "w": 12, "h": 8 },
+      "targets": [
+        { "expr": "mongodb_memory_resident_mb{connection_name=~\"$connection_name\"}", "legendFormat": "Resident" },
+        { "expr": "mongodb_memory_virtual_mb{connection_name=~\"$connection_name\"}", "legendFormat": "Virtual" }
+      ]
+    },
+    {
+      "id": 7,
+      "title": "Network Throughput (bytes)",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 12, "w": 12, "h": 8 },
+      "targets": [
+        { "expr": "rate(mongodb_network_bytes_in_total{connection_name=~\"$connection_name\"}[1m])", "legendFormat": "Bytes In/s" },
+        { "expr": "rate(mongodb_network_bytes_out_total{connection_name=~\"$connection_name\"}[1m])", "legendFormat": "Bytes Out/s" }
+      ]
+    },
+    {
+      "id": 8,
+      "title": "Replication Lag (seconds)",
+      "type": "timeseries",
+      "gridPos": { "x": 12, "y": 12, "w": 12, "h": 8 },
+      "targets": [
+        { "expr": "mongodb_replication_lag_seconds{connection_name=~\"$connection_name\"}", "legendFormat": "{{member}}" }
+      ]
+    }
+  ]
+}

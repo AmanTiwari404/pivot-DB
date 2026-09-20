@@ -1,0 +1,97 @@
+# =========================
+# Environment & Secrets
+# =========================
+.env
+.env.local
+.env.*.local
+.env.development
+.env.test
+.env.production
+*.pem
+*.key
+*.cert
+*.p12
+
+# =========================
+# Dependencies
+# =========================
+node_modules/
+.pnp
+.pnp.js
+.pnpm-store/
+
+# =========================
+# Build Outputs
+# =========================
+dist/
+build/
+out/
+.next/
+.nuxt/
+.output/
+*.tsbuildinfo
+next-env.d.ts
+
+# =========================
+# Logs
+# =========================
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# =========================
+# OS Files
+# =========================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# =========================
+# Editor & IDE
+# =========================
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+*.sublime-project
+*.sublime-workspace
+
+# =========================
+# Testing & Coverage
+# =========================
+coverage/
+*.lcov
+.nyc_output/
+
+# =========================
+# Prisma
+# =========================
+prisma/migrations/dev/
+
+# =========================
+# Docker
+# =========================
+.dockerignore
+
+# =========================
+# Misc
+# =========================
+.cache/
+.parcel-cache/
+.turbo/
+*.tgz
+
+# Local machine overrides (not shared)
+docker-compose.override.yml

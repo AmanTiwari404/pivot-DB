@@ -1,0 +1,137 @@
+{
+  "title": "MySQL Monitor",
+  "uid": "sqlmon-mysql",
+  "schemaVersion": 38,
+  "refresh": "15s",
+  "time": { "from": "now-1h", "to": "now" },
+  "tags": ["mysql", "sqlmon"],
+  "templating": {
+    "list": [
+      {
+        "name": "connection_name",
+        "type": "query",
+        "datasource": "Prometheus",
+        "query": "label_values(sqlmon_connections_current{db_type=\"mysql\"}, connection_name)",
+        "refresh": 2,
+        "includeAll": false,
+        "label": "Connection"
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "title": "Current Connections",
+      "type": "stat",
+      "gridPos": { "x": 0, "y": 0, "w": 6, "h": 4 },
+      "targets": [
+        { "expr": "sqlmon_connections_current{db_type=\"mysql\",connection_name=~\"$connection_name\"}", "legendFormat": "Current" }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "Active Threads (running)",
+      "type": "stat",
+      "gridPos": { "x": 6, "y": 0, "w": 6, "h": 4 },
+      "targets": [
+        { "expr": "sqlmon_connections_active{db_type=\"mysql\",connection_name=~\"$connection_name\"}", "legendFormat": "Active" }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Avg Queries / sec",
+      "type": "stat",
+      "gridPos": { "x": 12, "y": 0, "w": 6, "h": 4 },
+      "targets": [
+        { "expr": "sqlmon_queries_per_sec{db_type=\"mysql\",connection_name=~\"$connection_name\"}", "legendFormat": "QPS" }
+      ],
+      "fieldConfig": { "defaults": { "decimals": 2 } }
+    },
+    {
+      "id": 4,
+      "title": "InnoDB Buffer Pool Hit",
+      "type": "gauge",
+      "gridPos": { "x": 18, "y": 0, "w": 6, "h": 4 },
+      "targets": [
+        { "expr": "sqlmon_cache_hit_ratio{db_type=\"mysql\",connection_name=~\"$connection_name\"} * 100", "legendFormat": "Hit %" }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent", "min": 0, "max": 100,
+          "thresholds": { "mode": "absolute", "steps": [
+            { "color": "red", "value": null },
+            { "color": "yellow", "value": 90 },
+            { "color": "green", "value": 99 }
+          ] }
+        }
+      }
+    },
+
+    {
+      "id": 5,
+      "title": "Threads Over Time",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 4, "w": 12, "h": 8 },
+      "targets": [
+        { "expr": "sqlmon_connections_current{db_type=\"mysql\",connection_name=~\"$connection_name\"}", "legendFormat": "connected" },
+        { "expr": "sqlmon_connections_active{db_type=\"mysql\",connection_name=~\"$connection_name\"}",   "legendFormat": "running" },
+        { "expr": "sqlmon_connections_max{db_type=\"mysql\",connection_name=~\"$connection_name\"}",      "legendFormat": "max" }
+      ]
+    },
+    {
+      "id": 6,
+      "title": "Queries + Transactions Over Time",
+      "type": "timeseries",
+      "gridPos": { "x": 12, "y": 4, "w": 12, "h": 8 },
+      "targets": [
+        { "expr": "sqlmon_queries_per_sec{db_type=\"mysql\",connection_name=~\"$connection_name\"}",     "legendFormat": "QPS" },
+        { "expr": "sqlmon_transactions_per_sec{db_type=\"mysql\",connection_name=~\"$connection_name\"}", "legendFormat": "TPS" }
+      ]
+    },
+
+    {
+      "id": 7,
+      "title": "InnoDB Buffer Pool Hit % Over Time",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 12, "w": 12, "h": 8 },
+      "targets": [
+        { "expr": "sqlmon_cache_hit_ratio{db_type=\"mysql\",connection_name=~\"$connection_name\"} * 100", "legendFormat": "hit %" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "percent", "min": 0, "max": 100 } }
+    },
+    {
+      "id": 8,
+      "title": "Replication Lag (seconds)",
+      "type": "timeseries",
+      "gridPos": { "x": 12, "y": 12, "w": 12, "h": 8 },
+      "targets": [
+        { "expr": "sqlmon_replication_lag_seconds{db_type=\"mysql\",connection_name=~\"$connection_name\"}", "legendFormat": "lag" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "s" } }
+    },
+
+    {
+      "id": 9,
+      "title": "Top Tables by Size",
+      "type": "table",
+      "gridPos": { "x": 0, "y": 20, "w": 24, "h": 8 },
+      "targets": [
+        {
+          "expr": "topk(10, sqlmon_table_size_bytes{db_type=\"mysql\",connection_name=~\"$connection_name\"})",
+          "format": "table",
+          "instant": true,
+          "legendFormat": "{{schema}}.{{table_name}}"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "bytes" } },
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": { "Time": true, "__name__": true, "app": true, "connection_id": true, "db_type": true, "job": true, "instance": true }
+          }
+        }
+      ]
+    }
+  ]
+}

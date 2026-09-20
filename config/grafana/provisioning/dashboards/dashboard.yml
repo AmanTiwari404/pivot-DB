@@ -1,0 +1,28 @@
+apiVersion: 1
+
+# One provider per engine — each gets its own folder in the Grafana UI so
+# users can find PG / MySQL / Mongo dashboards under intuitive headings.
+providers:
+  - name: mongodb-dashboards
+    folder: MongoDB
+    type: file
+    disableDeletion: false
+    editable: true
+    options:
+      path: /etc/grafana/provisioning/dashboards/mongodb
+
+  - name: postgres-dashboards
+    folder: PostgreSQL
+    type: file
+    disableDeletion: false
+    editable: true
+    options:
+      path: /etc/grafana/provisioning/dashboards/postgres
+
+  - name: mysql-dashboards
+    folder: MySQL
+    type: file
+    disableDeletion: false
+    editable: true
+    options:
+      path: /etc/grafana/provisioning/dashboards/mysql

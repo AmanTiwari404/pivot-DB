@@ -247,6 +247,4 @@ docker-compose.yml             production
 docker-compose.dev.yml         dev overrides
 ```
 
-## License
 
-Private — © 2026 Innovativus.

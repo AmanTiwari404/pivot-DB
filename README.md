@@ -32,7 +32,7 @@ One explorer shell, two engines. Tabs for Documents / Schema / Aggregate, a filt
 
 ![Explore — MongoDB](docs/screenshots/explore-mongo.png)
 
-Browsing `testdb.orders` — 1,000 documents, with collection stats (418 KB, 428 B average document) and the three index definitions in the right rail.
+Browsing `testdb.orders` — 1,000 documents, with collection stats and the three index definitions listed in the right rail.
 
 ![Explore — PostgreSQL](docs/screenshots/explore-sql.png)
 
@@ -58,7 +58,9 @@ A live Postgres → Postgres sync in the `tailing` phase, reading WAL through a 
 
 ![Monitor — MongoDB](docs/screenshots/monitor-mongo.png)
 
-Engine-aware Grafana panels embedded per connection, backed by Prometheus scraping `/metrics` every 15s. Ops/sec is derived by differencing cumulative `opcounters` between scrapes. *(Replication Lag reads "No data" because this fixture is a standalone `mongod` with no replica set.)*
+Engine-aware Grafana panels embedded per connection, backed by Prometheus scraping `/metrics` every 15s. Ops/sec is derived by differencing cumulative `opcounters` between scrapes.
+
+*Two things to note: the embedded panels always render in Grafana's dark theme — the iframe URL pins `theme=dark`, so they don't follow the app's light/dark setting. And Replication Lag reads "No data" because this fixture is a standalone `mongod` with no replica set.*
 
 ![Monitor — PostgreSQL](docs/screenshots/monitor-sql.png)
 

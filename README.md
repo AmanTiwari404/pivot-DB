@@ -16,6 +16,74 @@ Built for teams that run more than one database engine and don't want to glue to
 | **Monitor** | All 3 | Engine-aware Grafana dashboards, live current-ops, slow queries, top tables, replication lag |
 | **Alerts** | All 3 | Threshold rules on connections / ops/sec / cache hit / replication lag etc. with duration debounce + email/webhook notifications |
 
+## Screenshots
+
+Captured from a local run against the seeded fixtures in [`dev/test-dbs/`](dev/test-dbs/) — six connections spanning all three engines, three completed cross-engine migrations, and a CDC sync actively tailing.
+
+### Connections
+
+![Connections](docs/screenshots/connections.png)
+
+Six databases registered across MongoDB, PostgreSQL and MySQL. Each URI is stored AES-256-GCM encrypted; the badge shows the engine and the chips are free-form tags. **Test** probes the server for version, latency and topology.
+
+### Explore
+
+One explorer shell, two engines. Tabs for Documents / Schema / Aggregate, a filter box, and export — the same component regardless of what is underneath.
+
+![Explore — MongoDB](docs/screenshots/explore-mongo.png)
+
+Browsing `testdb.orders` — 1,000 documents, with collection stats (418 KB, 428 B average document) and the three index definitions in the right rail.
+
+![Explore — PostgreSQL](docs/screenshots/explore-sql.png)
+
+The same view against Postgres: declared columns instead of sampled fields, per-table row counts in the tree, and server-side pagination.
+
+### Migrate
+
+![Migrate — wizard](docs/screenshots/migrate-wizard.png)
+
+A three-step wizard — pick source and destination, preview the inferred schema, then run. Sample size controls how many documents are sampled to infer types; batch size controls rows per write.
+
+![Migrate — saved jobs](docs/screenshots/migrate-jobs.png)
+
+Three completed runs covering three of the nine directions: MongoDB → PostgreSQL (5,300 rows), PostgreSQL → MySQL (5,249) and MySQL → MongoDB (4,810). ObjectIds land as 24-char hex, nested documents as `JSONB`, and `AUTO_INCREMENT` columns as `IDENTITY`.
+
+### Sync (CDC)
+
+![Sync — active](docs/screenshots/sync-active.png)
+
+A live Postgres → Postgres sync in the `tailing` phase, reading WAL through a `pgoutput` replication slot. Counters are real events applied since the run started. The snapshot cursor is captured *before* the initial copy begins, so nothing written during the copy is missed.
+
+### Monitor
+
+![Monitor — MongoDB](docs/screenshots/monitor-mongo.png)
+
+Engine-aware Grafana panels embedded per connection, backed by Prometheus scraping `/metrics` every 15s. Ops/sec is derived by differencing cumulative `opcounters` between scrapes. *(Replication Lag reads "No data" because this fixture is a standalone `mongod` with no replica set.)*
+
+![Monitor — PostgreSQL](docs/screenshots/monitor-sql.png)
+
+The same page against Postgres resolves to a different dashboard entirely — transactions/sec, cache hit ratio and active queries in place of the WiredTiger and opcounter panels. Mongo metrics are exported under `mongodb_*` and SQL metrics under `sqlmon_*` from two separate registries.
+
+![Alert rules](docs/screenshots/alerts.png)
+
+Further down the same page: live current-ops, slow queries via the profiler, database sizes, the WiredTiger cache gauge, and threshold alert rules. Each rule has a duration debounce, so a momentary spike will not fire it.
+
+### Protect
+
+![Protect](docs/screenshots/protect.png)
+
+Scheduled backups per connection, driven by `mongodump` / `pg_dump` / `mysqldump` and written as AES-256-GCM encrypted archives. *(These show "Never run" because the native dump tools ship in the API Docker image, not on the host used for this capture.)*
+
+### Settings and sign-in
+
+![Settings](docs/screenshots/settings.png)
+
+Workspace administration — invite read-only viewers, and an audit log tab. Everything is scoped to the signed-in user's profile; a `superadmin` sees across all profiles, an `admin` only their own, and a `viewer` is blocked from every write.
+
+![Sign in](docs/screenshots/login.png)
+
+On a fresh instance this redirects to sign-up instead, to create the first superadmin.
+
 ## Architecture
 
 ```
